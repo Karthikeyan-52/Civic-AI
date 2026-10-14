@@ -48,20 +48,20 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  const distPath =
-    process.env.NODE_ENV === "development"
-      ? path.resolve(import.meta.dirname, "../..", "dist", "public")
-      : path.resolve(import.meta.dirname, "public");
-  if (!fs.existsSync(distPath)) {
-    console.error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first`
+  // The compiled server runs from dist/index.js.
+  // The frontend is built into dist/public.
+  const distPath = path.resolve(process.cwd(), "dist", "public");
+
+  if (!fs.existsSync(path.join(distPath, "index.html"))) {
+    throw new Error(
+      `Frontend build not found: ${path.join(distPath, "index.html")}`
     );
   }
 
   app.use(express.static(distPath));
 
-  // fall through to index.html if the file doesn't exist
+  // Serve the frontend for application routes.
   app.use("*", (_req, res) => {
-    res.sendFile(path.resolve(distPath, "index.html"));
+    res.sendFile(path.join(distPath, "index.html"));
   });
 }
